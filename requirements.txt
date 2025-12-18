@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pandas
+google-analytics-data
+openai
+python-dotenv
+openpyxl
+gspread
+oauth2client
