@@ -3,6 +3,7 @@ import aiohttp
 import json
 import sys
 import logging
+import time
 
 # Configure logging for tests
 logging.basicConfig(
@@ -17,11 +18,15 @@ async def test_query(name, payload, expected_substring=None):
     logger.info(f"\n--- Testing: {name} ---")
     logger.info(f"Query: {payload['query']}")
     
+    start_time = time.time()
+    
     async with aiohttp.ClientSession() as session:
         try:
             async with session.post(BASE_URL, json=payload, timeout=aiohttp.ClientTimeout(total=120)) as response:
+                elapsed_time = time.time() - start_time
+                
                 if response.status != 200:
-                    logger.error(f"FAILED: HTTP {response.status}")
+                    logger.error(f"FAILED: HTTP {response.status} (took {elapsed_time:.2f}s)")
                     text = await response.text()
                     logger.error(f"Response: {text}")
                     return False
@@ -32,17 +37,18 @@ async def test_query(name, payload, expected_substring=None):
                 
                 if expected_substring:
                     if expected_substring.lower() in answer.lower():
-                        logger.info("PASSED: Expected content found.")
+                        logger.info(f"PASSED: Expected content found. (took {elapsed_time:.2f}s)")
                         return True
                     else:
-                        logger.error(f"FAILED: Expected '{expected_substring}' not found.")
+                        logger.error(f"FAILED: Expected '{expected_substring}' not found. (took {elapsed_time:.2f}s)")
                         return False
                 else:
-                    logger.info("PASSED: Response received.")
+                    logger.info(f"PASSED: Response received. (took {elapsed_time:.2f}s)")
                     return True
 
         except Exception as e:
-            logger.error(f"ERROR: {e}")
+            elapsed_time = time.time() - start_time
+            logger.error(f"ERROR: {e} (took {elapsed_time:.2f}s)")
             return False
 
 # ============================================================================
