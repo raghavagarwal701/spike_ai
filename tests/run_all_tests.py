@@ -21,57 +21,70 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tests.conftest import logger
 
 # Import Tier 1 tests
-from tests.tier1.test_t1_01_daily_active_users import run_test as t1_01
-from tests.tier1.test_t1_02_daily_breakdown import run_test as t1_02
-from tests.tier1.test_t1_03_traffic_source import run_test as t1_03
-from tests.tier1.test_t1_04_specific_page import run_test as t1_04
-from tests.tier1.test_t1_05_trend_analysis import run_test as t1_05
+from tests.tier1.test_t1_01_daily_active_users import test_daily_active_users as t1_01
+from tests.tier1.test_t1_02_daily_breakdown import test_daily_breakdown as t1_02
+from tests.tier1.test_t1_03_traffic_source import test_traffic_source as t1_03
+from tests.tier1.test_t1_04_specific_page import test_specific_page as t1_04
+from tests.tier1.test_t1_05_trend_analysis import test_trend_analysis as t1_05
 
 # Import Tier 2 tests
-from tests.tier2.test_t2_01_non_https import run_test as t2_01
-from tests.tier2.test_t2_02_title_tag_length import run_test as t2_02
-from tests.tier2.test_t2_03_indexability import run_test as t2_03
-from tests.tier2.test_t2_04_missing_meta import run_test as t2_04
-from tests.tier2.test_t2_05_combined_condition import run_test as t2_05
+from tests.tier2.test_t2_01_non_https import test_non_https as t2_01
+from tests.tier2.test_t2_02_title_tag_length import test_title_tag_length as t2_02
+from tests.tier2.test_t2_03_indexability import test_indexability as t2_03
+from tests.tier2.test_t2_04_missing_meta import test_missing_meta as t2_04
+from tests.tier2.test_t2_05_combined_condition import test_combined_condition as t2_05
 
 # Import Tier 3 tests
-from tests.tier3.test_t3_01_top_pages_titles import run_test as t3_01
-from tests.tier3.test_t3_02_high_traffic_meta import run_test as t3_02
-from tests.tier3.test_t3_03_json_format import run_test as t3_03
-from tests.tier3.test_t3_04_non_indexable_traffic import run_test as t3_04
-from tests.tier3.test_t3_05_seo_risk import run_test as t3_05
+from tests.tier3.test_t3_01_top_pages_titles import test_top_pages_titles as t3_01
+from tests.tier3.test_t3_02_high_traffic_meta import test_high_traffic_meta as t3_02
+from tests.tier3.test_t3_03_json_format import test_json_format as t3_03
+from tests.tier3.test_t3_04_non_indexable_traffic import test_non_indexable_traffic as t3_04
+from tests.tier3.test_t3_05_seo_risk import test_seo_risk as t3_05
+
+
+async def run_test_safely(test_func, test_name):
+    """Run a test and catch any assertion errors, returning pass/fail."""
+    try:
+        await test_func()
+        return True
+    except AssertionError as e:
+        logger.error(f"Test {test_name} failed: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Test {test_name} errored: {e}")
+        return False
 
 
 async def run_tier1_tests():
     """Run all Tier 1 (Analytics Agent / GA4) tests."""
     results = []
-    results.append(await t1_01())
-    results.append(await t1_02())
-    results.append(await t1_03())
-    results.append(await t1_04())
-    results.append(await t1_05())
+    results.append(await run_test_safely(t1_01, "T1-01"))
+    results.append(await run_test_safely(t1_02, "T1-02"))
+    results.append(await run_test_safely(t1_03, "T1-03"))
+    results.append(await run_test_safely(t1_04, "T1-04"))
+    results.append(await run_test_safely(t1_05, "T1-05"))
     return results
 
 
 async def run_tier2_tests():
     """Run all Tier 2 (SEO Agent / Screaming Frog) tests."""
     results = []
-    results.append(await t2_01())
-    results.append(await t2_02())
-    results.append(await t2_03())
-    results.append(await t2_04())
-    results.append(await t2_05())
+    results.append(await run_test_safely(t2_01, "T2-01"))
+    results.append(await run_test_safely(t2_02, "T2-02"))
+    results.append(await run_test_safely(t2_03, "T2-03"))
+    results.append(await run_test_safely(t2_04, "T2-04"))
+    results.append(await run_test_safely(t2_05, "T2-05"))
     return results
 
 
 async def run_tier3_tests():
     """Run Tier 3 (Multi-Agent) tests."""
     results = []
-    results.append(await t3_01())
-    results.append(await t3_02())
-    results.append(await t3_03())
-    results.append(await t3_04())
-    results.append(await t3_05())
+    results.append(await run_test_safely(t3_01, "T3-01"))
+    results.append(await run_test_safely(t3_02, "T3-02"))
+    results.append(await run_test_safely(t3_03, "T3-03"))
+    results.append(await run_test_safely(t3_04, "T3-04"))
+    results.append(await run_test_safely(t3_05, "T3-05"))
     return results
 
 

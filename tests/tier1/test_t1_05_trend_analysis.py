@@ -7,15 +7,18 @@ import asyncio
 import sys
 import os
 
+import pytest
+
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tests.conftest import test_query, DEFAULT_PROPERTY_ID, logger
+from tests.conftest import execute_query, DEFAULT_PROPERTY_ID, logger
 
 
-async def run_test():
+@pytest.mark.asyncio
+async def test_trend_analysis():
     """Test trend analysis query."""
-    return await test_query(
+    result = await execute_query(
         "T1-05: Trend Analysis",
         {
             "propertyId": DEFAULT_PROPERTY_ID,
@@ -23,8 +26,9 @@ async def run_test():
         },
         expected_substring=None
     )
+    assert result, "Test failed: Trend analysis query did not succeed"
 
 
 if __name__ == "__main__":
-    result = asyncio.run(run_test())
+    result = asyncio.run(test_trend_analysis())
     sys.exit(0 if result else 1)

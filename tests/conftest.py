@@ -21,7 +21,7 @@ BASE_URL = "http://localhost:8080/query"
 DEFAULT_PROPERTY_ID = "516747840"
 
 
-async def test_query(name: str, payload: dict, expected_substring: str = None) -> bool:
+async def execute_query(name: str, payload: dict, expected_substring: str = None) -> bool:
     """
     Execute a test query against the API.
     
