@@ -107,13 +107,24 @@ The `source` field accepts either:
 ### 5. Install and Run
 
 ```bash
+# Production Mode (Default)
+# Safe start - ensures no downtime by failing if server is already running
 bash deploy.sh
+
+# Development Mode
+# Force restart - kills existing process on port 8080 and enables hot-reload
+bash deploy.sh --dev
 ```
 
-This script will:
+The script will:
 1. Create a virtual environment (if not exists)
 2. Install dependencies via `uv` or `pip`
-3. Start the server on `http://localhost:8080`
+3. Check port 8080 availability
+   - **Prod**: Exits if port is busy
+   - **Dev**: Kills process occupying the port
+4. Start the server on `http://localhost:8080`
+   - **Prod**: Standard mode
+   - **Dev**: Auto-reload enabled (`uvicorn --reload`)
 
 ---
 

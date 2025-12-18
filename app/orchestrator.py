@@ -7,7 +7,7 @@ from app.models import QueryRequest
 from app.agents.analytics import analytics_agent
 from app.agents.seo import seo_agent
 from app.llm.client import llm_client
-from app.llm.schemas import IntentClassification, DecomposedQuery
+from app.llm.schemas import IntentClassification, DecomposedQuery, MultiAgentResponse
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,9 @@ Property ID Provided: {bool(property_id)}
 Classify the query into ONE of these categories:
 - ANALYTICS: Query only needs GA4 data
 - SEO: Query only needs SEO audit data  
-- BOTH: Query needs data from both sources (e.g., "top pages by views AND their title tags")"""
+- BOTH: Query needs data from both sources (e.g., "top pages by views AND their title tags")
+        
+Return a JSON object with a single field "intent" containing one of the above values."""
         
         try:
             result = llm_client.chat_structured(
@@ -181,12 +183,22 @@ Provide:
         3. Provide a comprehensive answer combining insights from both sources
         4. Limit results to {limit} items unless otherwise specified
         5. If data from one source is missing, explain what was available
+        
+        REQUIRED OUTPUT STRUCTURE:
+        Return a JSON object with exactly two fields:
+        - "answer": The comprehensive answer string (or JSON string if requested).
+        - "references": A list of source URLs used.
+        
         {json_instruction}
         """
         
         try:
-            fused_response = llm_client.chat([{"role": "user", "content": fusion_prompt}], model="gemini-2.5-flash")
-            return fused_response
+            fused_response = llm_client.chat_structured(
+                [{"role": "user", "content": fusion_prompt}],
+                response_model=MultiAgentResponse,
+                model="gemini-2.5-flash"
+            )
+            return fused_response.answer
         except Exception as e:
             # Fallback: Return whatever data we have
             return f"Multi-agent query partially completed.\n\nAnalytics: {analytics_data}\n\nSEO: {seo_data}"

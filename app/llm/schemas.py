@@ -3,7 +3,7 @@ Pydantic schemas for structured LLM outputs.
 These models ensure reliable, type-safe responses from the LLM.
 """
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Literal, List, Optional, Any
 
 
@@ -31,6 +31,17 @@ class DecomposedQuery(BaseModel):
     limit: int = Field(
         default=10,
         description="Number of results requested (default: 10)"
+    )
+
+
+class MultiAgentResponse(BaseModel):
+    """Response schema for multi-agent fusion results."""
+    answer: str = Field(
+        description="Comprehensive natural language answer combining insights from all sources."
+    )
+    references: List[str] = Field(
+        default=[],
+        description="List of referenced URLs or data points used in the answer."
     )
 
 
@@ -78,6 +89,17 @@ class GA4QueryPlan(BaseModel):
     )
 
 
+class AnalysisSummary(BaseModel):
+    """Response schema for analytics data summary."""
+    summary: str = Field(
+        description="Concise natural language summary of the data insights."
+    )
+    key_insights: List[str] = Field(
+        default=[],
+        description="List of specific key data points or trends identified."
+    )
+
+
 # ============== SEO Agent Schemas ==============
 
 class SEOCodeResponse(BaseModel):
@@ -85,3 +107,15 @@ class SEOCodeResponse(BaseModel):
     code: str = Field(
         description="Python code to execute. Must populate a 'result' variable with the final answer. Do not include markdown fencing."
     )
+
+    @model_validator(mode='before')
+    @classmethod
+    def map_result_to_code(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            # Check for 'result' fallback
+            if 'result' in data and 'code' not in data:
+                data['code'] = data.pop('result')
+            # Check for 'answer' fallback
+            elif 'answer' in data and 'code' not in data:
+                data['code'] = data.pop('answer')
+        return data

@@ -70,23 +70,24 @@ class LiteLLMClient:
         """
         base_delay = 1
         
-        # Generate JSON schema from Pydantic model
-        schema = response_model.model_json_schema()
-        
         for attempt in range(max_retries):
             try:
-                response = self.client.chat.completions.create(
+                # Use the beta parse method which handles schema generation and validation
+                response = self.client.beta.chat.completions.parse(
                     model=model,
                     messages=messages,
-                    response_format={
-                        "type": "json_object",
-                        "schema": schema
-                    }
+                    response_format=response_model
                 )
-                content = response.choices[0].message.content
                 
-                # Parse and validate with Pydantic
-                return response_model.model_validate_json(content)
+                parsed_response = response.choices[0].message.parsed
+                
+                if parsed_response:
+                    return parsed_response
+                elif response.choices[0].message.refusal:
+                    logger.warning(f"Model refused to generate structured output: {response.choices[0].message.refusal}")
+                    raise ValueError(f"Model refused request: {response.choices[0].message.refusal}")
+                else:
+                    raise ValueError("Model returned response but parsing failed.")
                 
             except APIError as e:
                 if e.status_code == 429:
@@ -95,13 +96,11 @@ class LiteLLMClient:
                     time.sleep(wait_time)
                 else:
                     raise e
-            except json.JSONDecodeError as e:
-                logger.error(f"JSON decode error: {e}")
-                raise ValueError(f"LLM returned invalid JSON: {e}")
             except Exception as e:
                 logger.error(f"Unexpected error: {e}")
-                raise e
-                
+                # If it's the last attempt, re-raise
+                if attempt == max_retries - 1:
+                    raise e
         raise Exception("Max retries exceeded")
 
 

@@ -180,11 +180,13 @@ class SEOAgent:
         User Information Request: "{query}"
         
         Write Python code to calculate the answer.
-        - You MUST populate a variable named `result` with the final string answer or data.
+        - You MUST return a JSON object with a field "code" containing the Python code.
+        - The code MUST populate a variable named `result` with the final string answer or data.
         - Use `dfs['dataset_name']` to access data.
         - Assume `pd` is imported.
         - Handle case insensitivity if checking string contents.
-        - Return ONLY the executable Python code, no markdown fencing.
+        - Do not answer the question directly. Write Python code to calculate it.
+        - If data is missing or query is impossible, write code that sets `result` to an error message string.
         
         Example:
         result = str(dfs['internal_all'].head(5))

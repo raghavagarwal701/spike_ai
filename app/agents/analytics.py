@@ -11,7 +11,7 @@ from google.analytics.data_v1beta.types import (
     OrderBy
 )
 from app.llm.client import llm_client
-from app.llm.schemas import GA4QueryPlan
+from app.llm.schemas import GA4QueryPlan, AnalysisSummary
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +208,10 @@ IMPORTANT: Use standard GA4 API metric and dimension names:
         If the data is empty, explain that no data was found for the requested period.
         """
         
-        return llm_client.chat([{"role": "user", "content": prompt}], model="gemini-2.5-flash")
+        return llm_client.chat_structured(
+            [{"role": "user", "content": prompt}],
+            response_model=AnalysisSummary,
+            model="gemini-2.5-flash"
+        ).summary
 
 analytics_agent = AnalyticsAgent()
