@@ -3,8 +3,8 @@ Pydantic schemas for structured LLM outputs.
 These models ensure reliable, type-safe responses from the LLM.
 """
 
-from pydantic import BaseModel, Field
-from typing import Literal, List, Optional
+from pydantic import BaseModel, Field, field_validator
+from typing import Literal, List, Optional, Any
 
 
 # ============== Orchestrator Schemas ==============
@@ -46,6 +46,18 @@ class OrderByField(BaseModel):
     """Order by specification for GA4 queries."""
     field: str = Field(description="Field name to order by (metric or dimension)")
     desc: bool = Field(default=True, description="True for descending order, False for ascending")
+
+    @field_validator('field', mode='before')
+    @classmethod
+    def normalize_field_name(cls, v: Any, info) -> str:
+        """Accept 'field' directly if provided."""
+        return v
+    
+    def __init__(self, **data):
+        # Handle 'field_name' as an alias for 'field'
+        if 'field_name' in data and 'field' not in data:
+            data['field'] = data.pop('field_name')
+        super().__init__(**data)
 
 
 class GA4QueryPlan(BaseModel):
