@@ -18,6 +18,31 @@ for arg in "$@"; do
     esac
 done
 
+# Check for .env file and ensure LITELLM_API_KEY is properly configured
+if [ ! -f ".env" ]; then
+    if [ -f ".env.example" ]; then
+        echo "Copying .env.example to .env..."
+        cp .env.example .env
+        echo "ERROR: .env file was created from .env.example."
+        echo "Please open .env and set your LITELLM_API_KEY before running this script."
+        exit 1
+    else
+        echo "ERROR: .env file is missing and .env.example not found."
+        exit 1
+    fi
+fi
+
+# Check if key is empty or missing
+if grep -q "^LITELLM_API_KEY=$" .env; then
+    echo "ERROR: LITELLM_API_KEY is empty in .env. Please update it with your actual key."
+    exit 1
+fi
+
+if ! grep -q "LITELLM_API_KEY=" .env; then
+    echo "ERROR: LITELLM_API_KEY is not defined in .env."
+    exit 1
+fi
+
 # Ensure python3 is available
 if ! command -v python3 &> /dev/null; then
     echo "Python3 could not be found"

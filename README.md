@@ -24,7 +24,11 @@ A production-ready AI backend for natural language queries about web analytics a
 ├── requirements.txt        # Python dependencies
 ├── credentials.json        # Google Service Account key (not in repo)
 ├── spreadsheets.json       # Google Sheets configuration
-└── .env                    # Environment variables (not in repo)
+├── .env                    # Environment variables (not in repo)
+└── tests/                  # Test suite
+    ├── test_tier1_simple.py
+    ├── test_tier2_simple.py
+    └── test_tier3_simple.py
 ```
 
 ### Key Features
@@ -220,10 +224,10 @@ Health check endpoint.
 
 ## Testing
 
-Run the operational test script to verify both agents:
+Run the test suite using pytest:
 
 ```bash
-python3 test_system.py
+pytest tests/
 ```
 
 ---
@@ -264,3 +268,5 @@ python3 test_system.py
 | `gspread` | Google Sheets access |
 | `oauth2client` | Google OAuth2 credentials |
 | `openpyxl` | Excel file support |
+| `pytest` | Testing framework |
+| `pytest-asyncio` | Asyncio support for pytest |
