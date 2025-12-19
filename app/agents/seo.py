@@ -6,6 +6,7 @@ import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from dotenv import load_dotenv
+import time
 from app.llm.client import llm_client
 from app.llm.schemas import SEOCodeResponse
 
@@ -113,17 +114,29 @@ class SEOAgent:
                         # Create a unique key combining spreadsheet name and sheet name
                         key = f"{spreadsheet_name}__{sheet_name}".lower().replace(" ", "_")
 
-                        data = worksheet.get_all_records()
-                        if data:
-                            self.dfs[key] = pd.DataFrame(data)
-                            logger.info(f"Loaded sheet: {key} ({len(data)} rows)")
-                        else:
-                            values = worksheet.get_all_values()
-                            if len(values) > 1:
-                                headers = values[0]
-                                rows = values[1:]
-                                self.dfs[key] = pd.DataFrame(rows, columns=headers)
-                                logger.info(f"Loaded sheet: {key} ({len(rows)} rows)")
+                        # Simple retry mechanism for Rate Limit (429)
+                        max_retries = 5
+                        for attempt in range(max_retries):
+                            try:
+                                data = worksheet.get_all_records()
+                                if data:
+                                    self.dfs[key] = pd.DataFrame(data)
+                                    logger.info(f"Loaded sheet: {key} ({len(data)} rows)")
+                                else:
+                                    values = worksheet.get_all_values()
+                                    if len(values) > 1:
+                                        headers = values[0]
+                                        rows = values[1:]
+                                        self.dfs[key] = pd.DataFrame(rows, columns=headers)
+                                        logger.info(f"Loaded sheet: {key} ({len(rows)} rows)")
+                                break  # Success, exit retry loop
+                            except Exception as e:
+                                if "429" in str(e) and attempt < max_retries - 1:
+                                    wait_time = (2 ** attempt) + 1  # Exponential backoff: 2, 3, 5, 9...
+                                    logger.warning(f"Rate limit hit for '{sheet_name}'. Retrying in {wait_time}s... (Attempt {attempt + 1}/{max_retries})")
+                                    time.sleep(wait_time)
+                                else:
+                                    raise e  # Re-raise if not 429 or out of retries
                                 
                 except Exception as e:
                     logger.error(f"Error loading spreadsheet '{spreadsheet_name}': {e}")
@@ -155,7 +168,7 @@ class SEOAgent:
         try:
             # Sandbox environment
             local_vars = {"dfs": self.dfs, "pd": pd}
-            exec(code, {}, local_vars)
+            exec(code, local_vars)
             
             # Expect result in 'result' variable
             if "result" in local_vars:
@@ -169,7 +182,7 @@ class SEOAgent:
         # Prepare context about available dataframes
         schema_info = "Available Dataframes (in 'dfs' dictionary):\n"
         for name, df in self.dfs.items():
-            columns = ", ".join(df.columns.tolist()[:15])  # First 15 cols
+            columns = ", ".join(df.columns.tolist())  # List all columns
             schema_info += f"- {name}: Columns [{columns}]\n"
             
         prompt = f"""

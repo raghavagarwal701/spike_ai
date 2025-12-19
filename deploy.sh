@@ -105,6 +105,8 @@ echo "Waiting for server to start..."
 for i in {1..60}; do
     if curl -s http://localhost:$PORT/health > /dev/null 2>&1; then
         echo "Server is ready!"
+        echo "Tailing server.log..."
+        tail -f server.log
         exit 0
     fi
     sleep 1

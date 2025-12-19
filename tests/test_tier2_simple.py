@@ -36,5 +36,17 @@ def test_tier2():
         "Which URLs have title tags longer than 60 characters?"
     )
 
+    # 3. Indexability Overview
+    run_query(
+        "Indexability Overview",
+        "Group all pages by indexability status and provide a count for each group with a brief explanation."
+    )
+
+    # 4. Calculated SEO Insight (LLM Reasoning)
+    run_query(
+        "Calculated SEO Insight",
+        "Calculate the percentage of indexable pages on the site. Based on this number, assess whether the site’s technical SEO health is good, average, or poor."
+    )
+
 if __name__ == "__main__":
     test_tier2()
